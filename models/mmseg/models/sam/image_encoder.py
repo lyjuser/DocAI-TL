@@ -10,7 +10,7 @@ import torch.nn.functional as F
 
 from typing import Optional, Tuple, Type
 
-from .common import LayerNorm2d, MLPBlock, Adapter, Multiscale_Adapter, Feature_Recalibration_Module
+from .common import LayerNorm2d, MLPBlock, Adapter
 from torch.nn import Conv2d, Dropout
 import math
 import warnings
@@ -207,39 +207,6 @@ class ImageEncoderViT(nn.Module):
             x = blk(x)
         x = self.neck(x.permute(0, 3, 1, 2))  # (B, 256, 64, 64)
         return x
-
-    # def forward(self, x: torch.Tensor, map_features=None, flag=None) -> torch.Tensor: # 流动方向，视觉支路指向文本支路
-    #     if flag == 'text_stream': # text_branch
-    #         x = self.patch_embed(x)  # (B, 64, 64, hidden_dim)
-    #         if self.pos_embed is not None:
-    #             x = x + self.pos_embed
-    #         for i, blk in enumerate(self.blocks):
-    #             x = blk(x)
-    #             x = x + map_features[i+1]
-    #         x = self.neck(x.permute(0, 3, 1, 2))  # (B, 256, 64, 64)
-    #         x = x + map_features[-1]
-    #         return x
-    #     elif flag == 'visual_stream':
-    #         prompts = []
-    #         x = self.patch_embed(x)
-    #         if self.pos_embed is not None:
-    #             x = x + self.pos_embed
-    #         prompts.append(x)
-    #         for i, blk in enumerate(self.blocks):
-    #             x = blk(x)
-    #             prompts.append(x)
-    #         x = self.neck(x.permute(0, 3, 1, 2))
-    #         prompts.append(x)
-    #         return prompts
-    #     else:
-    #         x = self.patch_embed(x)  # (B, 64, 64, hidden_dim)
-    #         B, H, W, C = x.shape
-    #         if self.pos_embed is not None:
-    #             x = x + self.pos_embed
-    #         for i, blk in enumerate(self.blocks):
-    #             x = blk(x)
-    #         x = self.neck(x.permute(0, 3, 1, 2))  # (B, 256, 64, 64)
-    #         return x
 
 
 def to_2tuple(x):
@@ -646,74 +613,6 @@ class AdapterBlock(nn.Module):
         xn = self.norm2(x)
         x = x + self.mlp(xn) + self.scale * self.MLP_Adapter(xn)
         # x = self.mlp(self.norm2(x)) + self.scale * self.MLP_Adapter(x)
-
-        return x
-
-class MultiScale_AdapterBlock(nn.Module):
-    """Transformer blocks with support of window attention and residual propagation blocks"""
-
-    def __init__(
-        self,
-        dim: int,
-        num_heads: int,
-        mlp_ratio: float = 4.0,
-        qkv_bias: bool = True,
-        norm_layer: Type[nn.Module] = nn.LayerNorm,
-        act_layer: Type[nn.Module] = nn.GELU,
-        use_rel_pos: bool = False,
-        rel_pos_zero_init: bool = True,
-        window_size: int = 0,
-        input_size: Optional[Tuple[int, int]] = None,
-    ) -> None:
-        """
-        Args:
-            dim (int): Number of input channels.
-            num_heads (int): Number of attention heads in each ViT block.
-            mlp_ratio (float): Ratio of mlp hidden dim to embedding dim.
-            qkv_bias (bool): If True, add a learnable bias to query, key, value.
-            norm_layer (nn.Module): Normalization layer.
-            act_layer (nn.Module): Activation layer.
-            use_rel_pos (bool): If True, add relative positional embeddings to the attention map.
-            rel_pos_zero_init (bool): If True, zero initialize relative positional parameters.
-            window_size (int): Window size for window attention blocks. If it equals 0, then
-                use global attention.
-            input_size (tuple(int, int) or None): Input resolution for calculating the relative
-                positional parameter size.
-        """
-        super().__init__()
-        self.norm1 = norm_layer(dim)
-        self.attn = Attention(
-            dim,
-            num_heads=num_heads,
-            qkv_bias=qkv_bias,
-            use_rel_pos=use_rel_pos,
-            rel_pos_zero_init=rel_pos_zero_init,
-            input_size=input_size if window_size == 0 else (window_size, window_size),
-        )
-
-        self.norm2 = norm_layer(dim)
-        self.mlp = MLPBlock(embedding_dim=dim, mlp_dim=int(dim * mlp_ratio), act=act_layer)
-        self.multiscale_adapter = Multiscale_Adapter(in_planes=dim, out_planes=dim)
-
-        self.window_size = window_size
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        shortcut = x
-        x = self.norm1(x)
-        # Window partition
-        if self.window_size > 0:
-            H, W = x.shape[1], x.shape[2]
-            x, pad_hw = window_partition(x, self.window_size)
-
-        x = self.attn(x)
-        # Reverse window partition
-        if self.window_size > 0:
-            x = window_unpartition(x, self.window_size, pad_hw, (H, W))
-
-        x = shortcut + x
-        x = x + self.mlp(self.norm2(x))
-
-        x = x + self.multiscale_adapter(x.permute(0, 3, 1, 2)).permute(0, 3, 2, 1)
 
         return x
 
