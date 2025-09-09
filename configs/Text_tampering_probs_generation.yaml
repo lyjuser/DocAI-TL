@@ -2,14 +2,8 @@ train_dataset:
   dataset:
     name: paired-image-folders
     args:
-#      root_path_1: F:/Receipt_ID_for_Tamper_Location_Image_Without_WildReceipt_ZH/img
-#      root_path_2: F:/Receipt_ID_for_Tamper_Location_Image_Without_WildReceipt_ZH/annotation
-#      root_path_1: F:/Datasets/Certificate_Tamper_Dataset_Image/img/train
-#      root_path_2: F:/Datasets/Certificate_Tamper_Dataset_Image/annotation/train
-      root_path_1: F:/Datasets/IDC_Tamper_Dataset_Image/img/train
-      root_path_2: F:/Datasets/IDC_Tamper_Dataset_Image/annotation/train
-#      root_path_1: F:/Datasets/Form_Tamper_Dataset_Image/img/train
-#      root_path_2: F:/Datasets/Form_Tamper_Dataset_Image/annotation/train
+      root_path_1: F:/Datasets/Certificate_Tamper_Dataset_Image/img/train
+      root_path_2: F:/Datasets/Certificate_Tamper_Dataset_Image/annotation/train
       cache: none
       split_key: train
   wrapper:
@@ -21,5 +15,5 @@ train_dataset:
 
 data_size: 1024
 DocAI: Layoutlmv3
-DocAI_checkpoint: E:/Visual-DocAI-Net/DocAI_pretrained/funsd
-save_csv_path: E:/Visual-DocAI-Net/csv/IDC_Text_Tampering_Probs.csv
+DocAI_checkpoint: ./DocAI_pretrained/funsd
+save_csv_path: ./csv/Certificate_Text_Tampering_Probs.csv
