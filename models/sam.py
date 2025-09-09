@@ -149,16 +149,6 @@ class SAM(nn.Module):
         )
         self.prompt_embed_dim = encoder_mode['prompt_embed_dim']
 
-        # self.mask_encoding = nn.Sequential(
-        #     nn.Conv2d(1, 4, kernel_size=1, stride=1),
-        #     LayerNorm2d(4),
-        #     nn.GELU(),
-        #     nn.Conv2d(4, 16, kernel_size=1, stride=1),
-        #     LayerNorm2d(16),
-        #     nn.GELU(),
-        #     nn.Conv2d(16, 256, kernel_size=1),
-        # )
-
         self.mask_decoder = MaskDecoder(
             num_multimask_outputs=3,
             transformer=TwoWayTransformer(
@@ -171,8 +161,6 @@ class SAM(nn.Module):
             iou_head_depth=3,
             iou_head_hidden_dim=256,
         )
-        # # 增加图像块级分类器
-        # self.visual_classifier = nn.Linear(encoder_mode["out_chans"], 2)
 
         if 'evp' in encoder_mode['name']:
             for k, p in self.encoder.named_parameters():
