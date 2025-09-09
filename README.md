@@ -26,8 +26,8 @@ CUDA_VISIBLE_DEVICES=xx python -m torch.distributed.launch --nnodes x --nproc_pe
 ```
 
 ## Test
-run `python test.py --config save/experimental_name/config.yaml  --model  save/experimental_name/weight.pth
---save_name xx  --csv_path  csv/Certificate_Text_Tampering_Probs_Layoutlmv3.csv`
+run `python test.py --config save/experimental_name/config.yaml  --model save/experimental_name/weight.pth
+--save_name xx  --csv_path csv/Certificate_Text_Tampering_Probs_Layoutlmv3.csv`
 
 ## Acknowledgements
 
