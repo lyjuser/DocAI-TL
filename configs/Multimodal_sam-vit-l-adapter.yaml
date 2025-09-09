@@ -2,11 +2,6 @@ train_dataset:
   dataset:
     name: paired-image-folders
     args:
-#      root_path_1: F:/Receipt_ID_for_Tamper_Location_Patch_1024x1024/img/train
-#      root_path_2: F:/Receipt_ID_for_Tamper_Location_Patch_1024x1024/mask/train
-#      root_path_3: F:/Receipt_ID_for_Tamper_Location_Patch_1024x1024/annotation/train
-#      root_path_4: F:/Receipt_ID_for_Tamper_Location_Image/img
-#      root_path_5: F:/Receipt_ID_for_Tamper_Location_Image/annotation
       root_path_1: /pubdata/lipeiquan/lyj_datasets/Receipt_ID_for_Tamper_Location_Patch_1024x1024/img/train
       root_path_2: /pubdata/lipeiquan/lyj_datasets/Receipt_ID_for_Tamper_Location_Patch_1024x1024/mask/train
       root_path_3: /pubdata/lipeiquan/lyj_datasets/Receipt_ID_for_Tamper_Location_Patch_1024x1024/annotation/train
@@ -25,11 +20,6 @@ val_dataset:
   dataset:
     name: paired-image-folders
     args:
-#      root_path_1: F:/Receipt_ID_for_Tamper_Location_Patch_1024x1024/img/valid
-#      root_path_2: F:/Receipt_ID_for_Tamper_Location_Patch_1024x1024/mask/valid
-#      root_path_3: F:/Receipt_ID_for_Tamper_Location_Patch_1024x1024/annotation/train
-#      root_path_4: F:/Receipt_ID_for_Tamper_Location_Image/img
-#      root_path_5: F:/Receipt_ID_for_Tamper_Location_Image/annotation
       root_path_1: /pubdata/lipeiquan/lyj_datasets/Receipt_ID_for_Tamper_Location_Patch_1024x1024/img/valid
       root_path_2: /pubdata/lipeiquan/lyj_datasets/Receipt_ID_for_Tamper_Location_Patch_1024x1024/mask/valid
       root_path_3: /pubdata/lipeiquan/lyj_datasets/Receipt_ID_for_Tamper_Location_Patch_1024x1024/annotation/valid
@@ -47,16 +37,16 @@ test_dataset:
   dataset:
     name: paired-image-folders
     args:
-#      root_path_1: /pubdata/lipeiquan/lyj_datasets/Certificate_for_Tamper_Location_Patch_1024x1024/img/train
-#      root_path_2: /pubdata/lipeiquan/lyj_datasets/Certificate_for_Tamper_Location_Patch_1024x1024/mask/train
-#      root_path_3: /pubdata/lipeiquan/lyj_datasets/Certificate_for_Tamper_Location_Patch_1024x1024/annotation/train
-#      root_path_4: /pubdata/lipeiquan/lyj_datasets/Certificate_Tamper_Dataset_Image/img/train
-#      root_path_5: /pubdata/lipeiquan/lyj_datasets/Certificate_Tamper_Dataset_Image/annotation/train
-      root_path_1: /pubdata/lipeiquan/lyj_datasets/IDC_for_Tamper_Location_Patch_1024x1024/img/train
-      root_path_2: /pubdata/lipeiquan/lyj_datasets/IDC_for_Tamper_Location_Patch_1024x1024/mask/train
-      root_path_3: /pubdata/lipeiquan/lyj_datasets/IDC_for_Tamper_Location_Patch_1024x1024/annotation/train
-      root_path_4: /pubdata/lipeiquan/lyj_datasets/IDC_Tamper_Dataset_Image/img/train
-      root_path_5: /pubdata/lipeiquan/lyj_datasets/IDC_Tamper_Dataset_Image/annotation/train
+      root_path_1: /pubdata/lipeiquan/lyj_datasets/Certificate_for_Tamper_Location_Patch_1024x1024/img/train
+      root_path_2: /pubdata/lipeiquan/lyj_datasets/Certificate_for_Tamper_Location_Patch_1024x1024/mask/train
+      root_path_3: /pubdata/lipeiquan/lyj_datasets/Certificate_for_Tamper_Location_Patch_1024x1024/annotation/train
+      root_path_4: /pubdata/lipeiquan/lyj_datasets/Certificate_Tamper_Dataset_Image/img/train
+      root_path_5: /pubdata/lipeiquan/lyj_datasets/Certificate_Tamper_Dataset_Image/annotation/train
+      # root_path_1: /pubdata/lipeiquan/lyj_datasets/IDC_for_Tamper_Location_Patch_1024x1024/img/train
+      # root_path_2: /pubdata/lipeiquan/lyj_datasets/IDC_for_Tamper_Location_Patch_1024x1024/mask/train
+      # root_path_3: /pubdata/lipeiquan/lyj_datasets/IDC_for_Tamper_Location_Patch_1024x1024/annotation/train
+      # root_path_4: /pubdata/lipeiquan/lyj_datasets/IDC_Tamper_Dataset_Image/img/train
+      # root_path_5: /pubdata/lipeiquan/lyj_datasets/IDC_Tamper_Dataset_Image/annotation/train
       cache: none
       split_key: test
   wrapper:
@@ -67,13 +57,11 @@ test_dataset:
 
 eval_type: f1
 data_size: 1024
-#sam_checkpoint: ./pretrained/sam_vit_b_01ec64.pth
 sam_checkpoint: ./pretrained/model_epoch_best_1106_L.pth
 
 DocAI: Layoutlmv3
 #csv_path: ./csv/Receipt_ID_Text_Tampering_Probs.csv
 csv_path: ./csv/Receipt_ID_Text_Tampering_Probs_fintuned.csv
-#csv_path: ./csv/Receipt_Certificate_Text_Tampering_Probs.csv
 
 #DocAI: Layoutlmv2
 #csv_path: ./csv/Receipt_ID_Text_Tampering_Probs_Layoutlmv2.csv
@@ -137,15 +125,14 @@ model:
       adapter_tuning: true
       adapter_type: full
       scale: 0.5
-#      multiscale_adapter_tuning: false
 
 channel_attention: false
 
 optimizer:
   name: adamw
   args:
-#    lr: 1.0e-4
-    lr: 5.0e-5
+    lr: 1.0e-4
+    # lr: 5.0e-5
 lr_min: 1.0e-7
 epoch_max: 20
 
