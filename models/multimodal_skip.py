@@ -67,14 +67,10 @@ class Feature_refine(nn.Module):
         return x
 
 class Visual_DocAI_Net(nn.Module):
-    def __init__(self, model, device, channel_attention=False):
+    def __init__(self, model, device):
         super(Visual_DocAI_Net, self).__init__()
         self.model = model
         self.device = device
-        self.channel_attention = channel_attention
-        if channel_attention:
-            self.CAM = ChannelAttention()
-            self.FRE = Feature_refine()
 
         self.inp_size = self.model.image_encoder.img_size
         self.patch_size = self.model.image_encoder.patch_size
@@ -92,13 +88,9 @@ class Visual_DocAI_Net(nn.Module):
     def backward_G(self):
         """Calculate GAN and L1 loss for the generator"""
         self.loss_G = 0.3 * self.criterionBCE(self.pred_mask, self.gt_mask)
-        self.loss_G += 0.7 * _iou_loss(self.pred_mask, self.gt_mask)  # bce and iou ratio? 1:1/3:7?
+        # self.loss_G += 0.7 * _iou_loss(self.pred_mask, self.gt_mask)  # bce and iou ratio
 
-        # self.loss_G += 0.7 * dice_loss(self.pred_mask, self.gt_mask) # bce and dice ratio? 1:1/3:7?
-        # self.loss_G += 0.7 * self.criterionDice(self.pred_mask, self.gt_mask)  # bce and dice ratio? 1:1/3:7?
-
-        # pred_mask = torch.sigmoid(self.pred_mask)
-        # self.loss_G = self.criterion(pred_mask, self.gt_mask) # bce and dice ratio? 1:1/3:7?
+        self.loss_G += 0.7 * dice_loss(self.pred_mask, self.gt_mask) # bce and dice ratio
         self.loss_G.backward()
 
     def optimize_parameters(self, bbox=None, attention_mask=None, patch_norm_bbox=None, patch_original_bbox=None, offset_mapping=None, text_tampering_probs=None):
@@ -164,43 +156,25 @@ class Visual_DocAI_Net(nn.Module):
 
         gap_y = ((ocr_points_left_bottom - ocr_points_left_top) // L).tolist()
         probability_map = torch.zeros(B, 4096, dtype=torch.float)
-        for i in range(B):  # 逐个Batch处理
-            num_nonzero = torch.sum(attention_mask[i] != 0).item() # 实际token长度，去除Pad
-            is_subword = np.array(offset_mapping[i][:num_nonzero].tolist())[:, 0] != 0  # 逐个batch处理，根据offset_mapping判断该token是完整的词还是子词
-            # print("is_subword:", is_subword)
-            # print('len:', len(is_subword))
-            # a = text_tampering_prob[i].tolist()
+        for i in range(B):  
+            num_nonzero = torch.sum(attention_mask[i] != 0).item()
+            is_subword = np.array(offset_mapping[i][:num_nonzero].tolist())[:, 0] != 0  
             word_tampering_prob = [pred for idx, pred in enumerate(text_tampering_prob[i][:num_nonzero].tolist()) if not is_subword[idx]]
-            word_tampering_prob = torch.tensor(word_tampering_prob).to(self.device)[1:-1] # 去除特殊词元<cls>和<sep>
-            # print("nonzero:", num_nonzero)
-            # print('bbox nonzero:', bbox[i][:num_nonzero].shape)
+            word_tampering_prob = torch.tensor(word_tampering_prob).to(self.device)[1:-1] 
             word_bbox = [pred for idx, pred in enumerate(bbox[i][:num_nonzero].tolist()) if not is_subword[idx]]
             word_bbox = torch.tensor(word_bbox).to(self.device)[1:-1]
 
-            index = torch.where((patch_original_bbox[i][:, None] == word_bbox).all(-1))[1].tolist() # 从整张Image中取出对应Patch的文本篡改概率
+            index = torch.where((patch_original_bbox[i][:, None] == word_bbox).all(-1))[1].tolist() 
             patch_word_tampering_prob = word_tampering_prob[index]
-            # 遍历 patch_original_bbox 中的每个值，检查是否存在于 word_bbox 中
             matching_indices = []
             for idx, patch_box in enumerate(patch_original_bbox[i]):
-                # 检查当前 patch_box 是否在 word_bbox 中,在则记录值在patch_box中的位置，主要对付Layoutlmv2
                 if any(torch.equal(patch_box, word_box) for word_box in word_bbox):
                     matching_indices.append(idx)
 
-            # # print("patch_norm_bbox", patch_norm_bbox[i])
-            # print("patch_original_bbox", patch_original_bbox[i])
-            # # print('bbox:', bbox[i][:num_nonzero].detach().cpu().numpy())
-            # # print('len bbox:', len(bbox[i][:num_nonzero].detach().cpu().numpy()))
-            # print("word_bbox", word_bbox)
-            # print("index:", index)
-            # print("match_index:", matching_indices)
-            # # print("patch_word_tampering_prob shape:", patch_word_tampering_prob.shape)
-            # print("gay_y:", gap_y[i])
-            # # print("gay_y length:", len(gap_y[i]))
-
             gap_y_indics = torch.tensor(gap_y[i]).to(self.device)[matching_indices].tolist()
-            all_positions, all_tampering_probs = [], [] # 加跳跃连接
-            # for j, value in enumerate(gap_y[i]): # 逐个文本区域处理
-            for j, value in enumerate(gap_y_indics):  # 逐个文本区域处理
+            all_positions, all_tampering_probs = [], [] 
+            # for j, value in enumerate(gap_y[i]): 
+            for j, value in enumerate(gap_y_indics): 
                 for id in range(value + 1):
                     left_top = ocr_points_left_top[i, j].item()
                     right_top = ocr_points_right_top[i, j].item()
@@ -211,11 +185,6 @@ class Visual_DocAI_Net(nn.Module):
                     index_left = left_top + (id * L)
                     index_right = right_top + (id * L)
                     position = np.arange(index_left, index_right + 1, dtype=np.longlong)
-                    # if patch_word_tampering_prob[j].item() >= 0.5:
-                    #     tampering_prob = np.full(index_right - index_left + 1, 1.0, dtype=np.float32)
-                    # else:
-                    #     tampering_prob = np.full(index_right - index_left + 1, 0.0, dtype=np.float32)
-                    tampering_prob = np.full(index_right-index_left+1, patch_word_tampering_prob[j].item(), dtype=np.float32)
                     if len(all_positions) == 0:
                         all_positions.append(position)
                         all_tampering_probs.append(tampering_prob)
@@ -232,16 +201,15 @@ class Visual_DocAI_Net(nn.Module):
         threshold = 0.5
         B = patch_norm_bbox.shape[0]
         batch_probability_maps = []
-        for i in range(B):  # 逐个Batch处理
-            num_nonzero = torch.sum(attention_mask[i] != 0).item() # 实际token长度，去除Padding
-            is_subword = np.array(offset_mapping[i][:num_nonzero].tolist())[:, 0] != 0  # 逐个batch处理，根据offset_mapping判断该token是完整的词还是子词
-            # a = text_tampering_prob[i].tolist()
+        for i in range(B):  
+            num_nonzero = torch.sum(attention_mask[i] != 0).item() 
+            is_subword = np.array(offset_mapping[i][:num_nonzero].tolist())[:, 0] != 0  
             word_tampering_prob = [pred for idx, pred in enumerate(text_tampering_prob[i][:num_nonzero].tolist()) if not is_subword[idx]]
-            word_tampering_prob = torch.tensor(word_tampering_prob).to(self.device)[1:-1] # 去除特殊词元<cls>和<sep>
+            word_tampering_prob = torch.tensor(word_tampering_prob).to(self.device)[1:-1] 
             word_bbox = [pred for idx, pred in enumerate(bbox[i][:num_nonzero].tolist()) if not is_subword[idx]]
             word_bbox = torch.tensor(word_bbox).to(self.device)[1:-1]
 
-            index = torch.where((patch_original_bbox[i][:, None] == word_bbox).all(-1))[1].tolist() # 从整张Image中取出对应Patch的文本篡改概率
+            index = torch.where((patch_original_bbox[i][:, None] == word_bbox).all(-1))[1].tolist() 
             patch_word_tampering_prob = word_tampering_prob[index]
             probability_map = np.zeros((1, size, size))
             size_bbox, tampering_probs_list = [list(map(lambda y: int(y * size), x)) for x in patch_norm_bbox[i].cpu().tolist() if x != [0., 0., 0., 0.]], \
@@ -278,16 +246,6 @@ class Visual_DocAI_Net(nn.Module):
         #                                                        patch_original_bbox, offset_mapping, H)
 
         fusion_features = visual_features + (visual_features * probability_map)
-        if self.channel_attention:
-            self.fusion_features = self.CAM(fusion_features)
-        else:
-            self.fusion_features = fusion_features
-
-        # spatial_features = visual_features + (visual_features * probability_map)
-        # spatial_features = visual_features * probability_map
-        # if self.channel_attention:
-        #     channel_features = self.CAM(visual_features)
-        #     self.fusion_features = self.FRE(channel_features + spatial_features)
 
         # Predict masks
         low_res_masks, iou_predictions = self.model.mask_decoder(
@@ -301,36 +259,6 @@ class Visual_DocAI_Net(nn.Module):
         # Upscale the masks to the original image resolution
         masks = self.postprocess_masks(low_res_masks, self.inp_size, self.inp_size) # (B, 1, 256, 256) -> (B, 1, 1024, 1024)
         self.pred_mask = masks
-
-    # def forward(self, bbox=None, attention_mask=None, patch_norm_bbox=None, patch_original_bbox=None,
-    #             offset_mapping=None, text_tampering_prob=None):
-    #     bs = 1
-    #
-    #     # Embed prompts
-    #     sparse_embeddings = torch.empty((bs, 0, self.model.prompt_embed_dim), device=self.device) # (1, 0, 256)
-    #     # dense_embeddings = self.model.no_mask_embed.weight.reshape(1, -1, 1, 1).expand(
-    #     #     bs, -1, self.image_embedding_size, self.image_embedding_size) # (1, 256, 64, 64)
-    #
-    #     visual_features = self.model.image_encoder(self.input) # (B, 256, 64, 64)
-    #     B, C, H, W = visual_features.shape
-    #
-    #     num_patches = self.inp_size // self.patch_size
-    #     probability_map = self.probability_map_generation(visual_features, text_tampering_prob, bbox, attention_mask, patch_norm_bbox,
-    #                                                       patch_original_bbox, offset_mapping, num_patches)
-    #
-    #     dense_embeddings = self.model.mask_encoding(probability_map)
-    #     # Predict masks
-    #     low_res_masks, iou_predictions = self.model.mask_decoder(
-    #         image_embeddings=visual_features,
-    #         image_pe=self.get_dense_pe(),
-    #         sparse_prompt_embeddings=sparse_embeddings,
-    #         dense_prompt_embeddings=dense_embeddings,
-    #         multimask_output=False,
-    #     )
-    #
-    #     # Upscale the masks to the original image resolution
-    #     masks = self.postprocess_masks(low_res_masks, self.inp_size, self.inp_size) # (B, 1, 256, 256) -> (B, 1, 1024, 1024)
-    #     self.pred_mask = masks
 
     def infer(self, input, bbox=None, attention_mask=None, patch_norm_bbox=None, patch_original_bbox=None,
               offset_mapping=None, text_tampering_prob=None):
@@ -352,16 +280,6 @@ class Visual_DocAI_Net(nn.Module):
         #                                                        patch_original_bbox, offset_mapping, H)
 
         fusion_features = visual_features + (visual_features * probability_map)
-        if self.channel_attention:
-            self.fusion_features = self.CAM(fusion_features)
-        else:
-            self.fusion_features = fusion_features
-
-        # spatial_features = visual_features * probability_map
-        # # spatial_features = visual_features + (visual_features * probability_map)
-        # if self.channel_attention:
-        #     channel_features = self.CAM(visual_features)
-        #     self.fusion_features = self.FRE(channel_features + spatial_features)
 
         # Predict masks
         low_res_masks, iou_predictions = self.model.mask_decoder(
@@ -377,39 +295,3 @@ class Visual_DocAI_Net(nn.Module):
         probability_map = self.postprocess_masks(probability_map, self.inp_size, self.inp_size)
         return masks, probability_map
 
-    # def infer(self, input, bbox=None, attention_mask=None, patch_norm_bbox=None, patch_original_bbox=None,
-    #           offset_mapping=None, text_tampering_prob=None):
-    #     bs = 1
-    #
-    #     # Embed prompts
-    #     sparse_embeddings = torch.empty((bs, 0, self.model.prompt_embed_dim), device=self.device) # (1, 0, 256)
-    #     dense_embeddings = self.model.no_mask_embed.weight.reshape(1, -1, 1, 1).expand(
-    #         bs, -1, self.image_embedding_size, self.image_embedding_size) # (1, 256, 64, 64)
-    #
-    #     self.visual_features = self.model.image_encoder(input) # (B, 256, 64, 64)
-    #     B, C, H, W = self.visual_features.shape
-    #
-    #     num_patches = self.inp_size // self.patch_size
-    #     probability_map = self.probability_map_generation(self.visual_features, text_tampering_prob, bbox, attention_mask, patch_norm_bbox,
-    #                                                       patch_original_bbox, offset_mapping, num_patches)
-    #     # probability_map = self.probability_map_generation_1024(text_tampering_prob, bbox, attention_mask, patch_norm_bbox,
-    #     #                                                        patch_original_bbox, offset_mapping)
-    #
-    #     dense_embeddings = self.model.mask_encoding(probability_map)
-    #     # Predict masks
-    #     low_res_masks, iou_predictions = self.model.mask_decoder(
-    #         image_embeddings=self.visual_features,
-    #         image_pe=self.get_dense_pe(),
-    #         sparse_prompt_embeddings=sparse_embeddings,
-    #         dense_prompt_embeddings=dense_embeddings,
-    #         multimask_output=False,
-    #     )
-    #     # probability_map = F.interpolate(probability_map, (256, 256), mode="bilinear", align_corners=False)
-    #     # low_res_masks = low_res_masks * probability_map
-    #
-    #     # Upscale the masks to the original image resolution
-    #     masks = self.postprocess_masks(low_res_masks, self.inp_size, self.inp_size) # (B, 1, 256, 256) -> (B, 1, 1024, 1024)
-    #     # pred = torch.sigmoid(masks)
-    #     probability_map = self.postprocess_masks(probability_map, self.inp_size, self.inp_size) # (B, 1, 256, 256) -> (B, 1, 1024, 1024)
-    #     # masks = pred * probability_map
-    #     return masks, probability_map
