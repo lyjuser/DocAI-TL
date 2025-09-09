@@ -1,7 +1,7 @@
 # DocAI-TL
 DocAI-TL: Structured Document Tampering Localization with DocAI Model
 
-![Method Overview](figure/image1.png)
+![Method Overview](figure/image.png)
 
 ## Requirments
 
