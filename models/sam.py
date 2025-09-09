@@ -10,7 +10,6 @@ from models import register
 from .mmseg.models.sam import ImageEncoderViT, MaskDecoder, TwoWayTransformer, PromptEncoder
 
 logger = logging.getLogger(__name__)
-from .iou_loss import IOU
 from typing import Any, Optional, Tuple
 from .mmseg.models.sam.common import LayerNorm2d
 
