@@ -204,7 +204,7 @@ def DocAI_for_text_tampering_probability_prediction(train_loader, DocAI):
             processor = AutoProcessor.from_pretrained("E:/Visual-DocAI-Net/DocAI_pretrained/Layoutlmv3", apply_ocr=False)
             batch_encoding = processor(images=batch_img, text=batch_text, boxes=batch_img_bbox, word_labels=batch_label,
                                        padding=True, truncation=True, return_offsets_mapping=True, return_tensors="pt")
-            offset_mapping = batch_encoding.pop('offset_mapping')  # 返回字符偏移量映射表，长度等于文本段数目的列表，列表中每一项是一个长度等于段中字符数目的整数列表，用于表示每一个字符在原始文本中的偏移量，例如"Teacher" -> "GTE", "ACH","ER"
+            offset_mapping = batch_encoding.pop('offset_mapping') 
 
             input_ids, bbox, attention_mask, pixel_values = batch_encoding["input_ids"].to(device), batch_encoding["bbox"].to(device), \
                                                             batch_encoding["attention_mask"].to(device), batch_encoding["pixel_values"].to(device)
@@ -214,7 +214,7 @@ def DocAI_for_text_tampering_probability_prediction(train_loader, DocAI):
             processor = LayoutLMv3Processor.from_pretrained("E:/Visual-DocAI-Net/DocAI_pretrained/LilT", apply_ocr=False)
             batch_encoding = processor(images=batch_img, text=batch_text, boxes=batch_img_bbox, word_labels=batch_label,
                                        padding=True, truncation=True, return_offsets_mapping=True, return_tensors="pt")
-            offset_mapping = batch_encoding.pop('offset_mapping')  # 返回字符偏移量映射表，长度等于文本段数目的列表，列表中每一项是一个长度等于段中字符数目的整数列表，用于表示每一个字符在原始文本中的偏移量，例如"Teacher" -> "GTE", "ACH","ER"
+            offset_mapping = batch_encoding.pop('offset_mapping') 
 
             input_ids, bbox, attention_mask, pixel_values = batch_encoding["input_ids"].to(device), batch_encoding["bbox"].to(device), \
                                                             batch_encoding["attention_mask"].to(device), batch_encoding["pixel_values"].to(device)
@@ -248,7 +248,7 @@ def main(config_, save_path, args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', default="configs/train/setr/train_setr_evp_cod.yaml")
+    parser.add_argument('--config', default=None)
     parser.add_argument('--name', default=None)
     parser.add_argument('--tag', default=None)
     parser.add_argument("--local_rank", type=int, default=-1, help="")
@@ -262,5 +262,6 @@ if __name__ == '__main__':
     if save_name is None:
         save_name = '_' + args.config.split('/')[-1][:-len('.yaml')]
     save_path = os.path.join('./save', save_name)
+
 
     main(config, save_path, args=args)
