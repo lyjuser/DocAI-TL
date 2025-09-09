@@ -8,9 +8,15 @@ DocAI-TL: Structured Document Tampering Localization with DocAI Model
 For environment setup, please follow the [SAM-Adapter installation](https://github.com/tianrun-chen/SAM-Adapter-PyTorch/blob/main/requirements.txt).
 
 ## Dataset
-The T-CERT, T-FUNSD and tampered receipts from T-IDR will be publicly available. However, ID cards cannot be shared due to licensing restrictions.
+The T-CERT, T-FUNSD and tampered receipts from T-IDR are publicly available. However, ID cards cannot be shared due to licensing restrictions.
 
-You can down the above datasets [here](https://pan.baidu.com/s/18UNBbFuBINNDsERSeSrzyg) 🔑Extraction code: `nzis`
+You can download the above datasets [here](https://pan.baidu.com/s/18UNBbFuBINNDsERSeSrzyg)   🔑Extraction code: `nzis`
+
+## DocAI pretrained weight
+You can download the DocAI (LayoutLMv3, LayoutLMv2, and LiLT) pretrained weight [here](https://pan.baidu.com/s/1TnmtEzcdGPcb7Gv_CdefFg)  🔑Extraction code: `ntxy`
+
+## SAM model weight
+You can download the weights of SAM ViT-L and SAM-Adapter [here](https://pan.baidu.com/s/1GOypB9BHTooIWZNr0FneNQ)   🔑Extraction code: `g88u`
 
 ## Acknowledgements
 
