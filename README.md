@@ -21,20 +21,13 @@ You can download the weights of SAM ViT-L and SAM-Adapter [here](https://pan.bai
 ## Train
 Run the training command.
 ```
-CUDA_VISIBLE_DEVICES=xx python -m torch.distributed.launch --nnodes x --nproc_per_node x train.py  --config configs/Multimodal_sam-vit-l-adapter.yaml --name experimental_name --tag exp1 
+CUDA_VISIBLE_DEVICES=xx python -m torch.distributed.launch --nnodes x --nproc_per_node x train.py
+--config configs/Multimodal_sam-vit-l-adapter.yaml --name experimental_name --tag exp1 
 ```
 
 ## Test
-```
---config
-save/experimental_name/config.yaml
---model
-save/experimental_name/weight.pth
---save_name
-xx
---csv_path
-csv/Certificate_Text_Tampering_Probs_Layoutlmv3.csv
-```
+run `python test.py --config save/experimental_name/config.yaml  --model  save/experimental_name/weight.pth
+--save_name xx  --csv_path  csv/Certificate_Text_Tampering_Probs_Layoutlmv3.csv`
 
 ## Acknowledgements
 
