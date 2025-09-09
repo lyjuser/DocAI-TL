@@ -1,0 +1,157 @@
+train_dataset:
+  dataset:
+    name: paired-image-folders
+    args:
+#      root_path_1: F:/Receipt_ID_for_Tamper_Location_Patch_1024x1024/img/train
+#      root_path_2: F:/Receipt_ID_for_Tamper_Location_Patch_1024x1024/mask/train
+#      root_path_3: F:/Receipt_ID_for_Tamper_Location_Patch_1024x1024/annotation/train
+#      root_path_4: F:/Receipt_ID_for_Tamper_Location_Image/img
+#      root_path_5: F:/Receipt_ID_for_Tamper_Location_Image/annotation
+      root_path_1: /pubdata/lipeiquan/lyj_datasets/Receipt_ID_for_Tamper_Location_Patch_1024x1024/img/train
+      root_path_2: /pubdata/lipeiquan/lyj_datasets/Receipt_ID_for_Tamper_Location_Patch_1024x1024/mask/train
+      root_path_3: /pubdata/lipeiquan/lyj_datasets/Receipt_ID_for_Tamper_Location_Patch_1024x1024/annotation/train
+      root_path_4: /pubdata/lipeiquan/lyj_datasets/Receipt_ID_for_Tamper_Location_Image/img
+      root_path_5: /pubdata/lipeiquan/lyj_datasets/Receipt_ID_for_Tamper_Location_Image/annotation
+      cache: none
+      split_key: train
+  wrapper:
+    name: train
+    args:
+      inp_size: 1024
+      augment: false
+  batch_size: 2
+
+val_dataset:
+  dataset:
+    name: paired-image-folders
+    args:
+#      root_path_1: F:/Receipt_ID_for_Tamper_Location_Patch_1024x1024/img/valid
+#      root_path_2: F:/Receipt_ID_for_Tamper_Location_Patch_1024x1024/mask/valid
+#      root_path_3: F:/Receipt_ID_for_Tamper_Location_Patch_1024x1024/annotation/train
+#      root_path_4: F:/Receipt_ID_for_Tamper_Location_Image/img
+#      root_path_5: F:/Receipt_ID_for_Tamper_Location_Image/annotation
+      root_path_1: /pubdata/lipeiquan/lyj_datasets/Receipt_ID_for_Tamper_Location_Patch_1024x1024/img/valid
+      root_path_2: /pubdata/lipeiquan/lyj_datasets/Receipt_ID_for_Tamper_Location_Patch_1024x1024/mask/valid
+      root_path_3: /pubdata/lipeiquan/lyj_datasets/Receipt_ID_for_Tamper_Location_Patch_1024x1024/annotation/valid
+      root_path_4: /pubdata/lipeiquan/lyj_datasets/Receipt_ID_for_Tamper_Location_Image/img
+      root_path_5: /pubdata/lipeiquan/lyj_datasets/Receipt_ID_for_Tamper_Location_Image/annotation
+      cache: none
+      split_key: test
+  wrapper:
+    name: val
+    args:
+      inp_size: 1024
+  batch_size: 2
+
+test_dataset:
+  dataset:
+    name: paired-image-folders
+    args:
+#      root_path_1: /pubdata/lipeiquan/lyj_datasets/Certificate_for_Tamper_Location_Patch_1024x1024/img/train
+#      root_path_2: /pubdata/lipeiquan/lyj_datasets/Certificate_for_Tamper_Location_Patch_1024x1024/mask/train
+#      root_path_3: /pubdata/lipeiquan/lyj_datasets/Certificate_for_Tamper_Location_Patch_1024x1024/annotation/train
+#      root_path_4: /pubdata/lipeiquan/lyj_datasets/Certificate_Tamper_Dataset_Image/img/train
+#      root_path_5: /pubdata/lipeiquan/lyj_datasets/Certificate_Tamper_Dataset_Image/annotation/train
+      root_path_1: /pubdata/lipeiquan/lyj_datasets/IDC_for_Tamper_Location_Patch_1024x1024/img/train
+      root_path_2: /pubdata/lipeiquan/lyj_datasets/IDC_for_Tamper_Location_Patch_1024x1024/mask/train
+      root_path_3: /pubdata/lipeiquan/lyj_datasets/IDC_for_Tamper_Location_Patch_1024x1024/annotation/train
+      root_path_4: /pubdata/lipeiquan/lyj_datasets/IDC_Tamper_Dataset_Image/img/train
+      root_path_5: /pubdata/lipeiquan/lyj_datasets/IDC_Tamper_Dataset_Image/annotation/train
+      cache: none
+      split_key: test
+  wrapper:
+    name: val
+    args:
+      inp_size: 1024
+  batch_size: 1
+
+eval_type: f1
+data_size: 1024
+#sam_checkpoint: ./pretrained/sam_vit_b_01ec64.pth
+sam_checkpoint: ./pretrained/model_epoch_best_1106_L.pth
+
+DocAI: Layoutlmv3
+#csv_path: ./csv/Receipt_ID_Text_Tampering_Probs.csv
+csv_path: ./csv/Receipt_ID_Text_Tampering_Probs_fintuned.csv
+#csv_path: ./csv/Receipt_Certificate_Text_Tampering_Probs.csv
+
+#DocAI: Layoutlmv2
+#csv_path: ./csv/Receipt_ID_Text_Tampering_Probs_Layoutlmv2.csv
+#csv_path: ./csv/Receipt_ID_Text_Tampering_Probs_fintuned_Layoutlmv2.csv
+
+#DocAI: Lilt
+#csv_path: ./csv/Receipt_ID_Text_Tampering_Probs_Lilt.csv
+##csv_path: ./csv/Receipt_ID_Text_Tampering_Probs_fintuned_Lilt.csv
+
+data_norm:
+  inp:
+    sub:
+    - 0.5
+    div:
+    - 0.5
+  gt:
+    sub:
+    - 0.5
+    div:
+    - 0.5
+  gt_rgb:
+    sub:
+    - 0.5
+    div:
+    - 0.5
+
+model:
+  name: sam
+  args:
+    inp_size: 1024
+    loss: iou
+    encoder_mode:
+      name: sam
+      img_size: 1024
+      mlp_ratio: 4
+      patch_size: 16
+      qkv_bias: true
+      use_rel_pos: true
+      window_size: 14
+      out_chans: 256
+
+      scale_factor: 32
+      input_type: fft
+      freq_nums: 0.25
+      prompt_type: highpass
+      prompt_embed_dim: 256
+      tuning_stage: 1234
+      handcrafted_tune: true
+      embedding_tune: true
+      adaptor: adaptor
+
+      embed_dim: 1024
+      depth: 24
+      num_heads: 16
+      global_attn_indexes:
+      - 5
+      - 11
+      - 17
+      - 23
+
+      adapter_tuning: true
+      adapter_type: full
+      scale: 0.5
+#      multiscale_adapter_tuning: false
+
+channel_attention: false
+
+optimizer:
+  name: adamw
+  args:
+#    lr: 1.0e-4
+    lr: 5.0e-5
+lr_min: 1.0e-7
+epoch_max: 20
+
+multi_step_lr:
+  milestones:
+  - 1
+  gamma: 0.1
+epoch_val: 1
+epoch_save: 1
